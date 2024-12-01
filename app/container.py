@@ -1,9 +1,11 @@
+from app.database.registries.transaction_registry import TransactionRegistry
 from app.helpers.container import providers
 from app.helpers.db import SessionManager
 from app.helpers.redis import RedisStreamAmqp, RedisQueueAmqp
 from redis.asyncio.client import Redis
 
 from app.config import settings
+from app.workers.model_subscriber import ModelSubscriber
 
 
 class Container:
@@ -33,4 +35,12 @@ class Container:
         pool_size=settings.POSTGRES.pool_min_size,
         max_overflow=settings.POSTGRES.pool_max_size,
         pool_timeout=settings.POSTGRES.pool_timeout,
+    )
+    transaction_registry = providers.Singleton(
+        TransactionRegistry,
+        session_manager=session_manager,
+    )
+    model_subscriber = providers.Singleton(
+        ModelSubscriber,
+        transaction_registry=transaction_registry,
     )
